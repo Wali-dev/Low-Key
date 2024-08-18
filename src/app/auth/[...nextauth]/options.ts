@@ -1,44 +1,47 @@
-import NextAuth from "next-auth";
-import { NextAuthConfig } from "next-auth";
-import Credentials from "next-auth/providers/credentials";
+import { NextAuthOptions } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import bcrypt from 'bcryptjs';
+import dbConnect from '@/lib/dbConnect';
+import UserModel from '@/model/User';
 
-import bcrypt from "bcryptjs";
-import dbConnect from "@/lib/dbConnect";
-import UserModel from "@/model/User";
-
-
-export const authOptions: NextAuthConfig = {
+export const authOptions: NextAuthOptions = {
     providers: [
-        Credentials({
+        CredentialsProvider({
+            id: 'credentials',
+            name: 'Credentials',
             credentials: {
-                email: { label: "Email", type: "text" },
-                password: { label: "Password", type: "password" },
+                email: { label: 'Email', type: 'text' },
+                password: { label: 'Password', type: 'password' },
             },
             async authorize(credentials: any): Promise<any> {
                 await dbConnect();
                 try {
                     const user = await UserModel.findOne({
-                        $or: [{ email: credentials.identifier }, { username: credentials.identifier }] //EITHER THIS QUERY WILL BE DONE BY EMAIL OR USERNAME
+                        $or: [
+                            { email: credentials.identifier },
+                            { username: credentials.identifier },
+                        ],
                     });
                     if (!user) {
-                        throw new Error("no user found with this email")
+                        throw new Error('no user found with this email');
                     }
-                    if (!user.isVerified) { //CHECKING IF THE ACOUNT IS VERIFIED
-                        throw new Error("please verify your account first")
+                    if (!user.isVerified) {
+                        throw new Error('please verify your account before logging in');
                     }
-                    const isMatch = await bcrypt.compare(credentials.password, user.password);
-
-                    if (isMatch) {
-                        return user
+                    const isPasswordCorrect = await bcrypt.compare(
+                        credentials.password,
+                        user.password
+                    );
+                    if (isPasswordCorrect) {
+                        return user;
                     } else {
-                        throw new Error("incorrect password")
+                        throw new Error('incorrect password');
                     }
-                } catch (error: any) {
-                    throw new Error(error);
+                } catch (err: any) {
+                    throw new Error(err);
                 }
-
-            }
-        })
+            },
+        }),
     ],
     callbacks: {
         async jwt({ token, user }) {
@@ -60,86 +63,11 @@ export const authOptions: NextAuthConfig = {
             return session;
         },
     },
-    pages: {
-        signIn: "/signin"
-    },
     session: {
-        strategy: 'jwt'
+        strategy: 'jwt',
     },
-    secret: process.env.AUTH_SECRET,
-
-}
-
-// import  NextAuthOptions  from 'next-auth';
-// import CredentialsProvider from 'next-auth/providers/credentials';
-// import bcrypt from 'bcryptjs';
-// import dbConnect from '@/lib/dbConnect';
-// import UserModel from '@/model/User';
-
-// export const authOptions: NextAuthOptions = {
-//   providers: [
-//     CredentialsProvider({
-//       id: 'credentials',
-//       name: 'Credentials',
-//       credentials: {
-//         email: { label: 'Email', type: 'text' },
-//         password: { label: 'Password', type: 'password' },
-//       },
-//       async authorize(credentials: any): Promise<any> {
-//         await dbConnect();
-//         try {
-//           const user = await UserModel.findOne({
-//             $or: [
-//               { email: credentials.identifier },
-//               { username: credentials.identifier },
-//             ],
-//           });
-//           if (!user) {
-//             throw new Error('No user found with this email');
-//           }
-//           if (!user.isVerified) {
-//             throw new Error('Please verify your account before logging in');
-//           }
-//           const isPasswordCorrect = await bcrypt.compare(
-//             credentials.password,
-//             user.password
-//           );
-//           if (isPasswordCorrect) {
-//             return user;
-//           } else {
-//             throw new Error('Incorrect password');
-//           }
-//         } catch (err: any) {
-//           throw new Error(err);
-//         }
-//       },
-//     }),
-//   ],
-//   callbacks: {
-//     async jwt({ token, user }) {
-//       if (user) {
-//         token._id = user._id?.toString(); // Convert ObjectId to string
-//         token.isVerified = user.isVerified;
-//         token.isAcceptingMessages = user.isAcceptingMessages;
-//         token.username = user.username;
-//       }
-//       return token;
-//     },
-//     async session({ session, token }) {
-//       if (token) {
-//         session.user._id = token._id;
-//         session.user.isVerified = token.isVerified;
-//         session.user.isAcceptingMessages = token.isAcceptingMessages;
-//         session.user.username = token.username;
-//       }
-//       return session;
-//     },
-//   },
-//   session: {
-//     strategy: 'jwt',
-//   },
-//   secret: process.env.NEXTAUTH_SECRET,
-//   pages: {
-//     signIn: '/sign-in',
-//   },
-// };
+    secret: process.env.NEXTAUTH_SECRET,
+    pages: {
+        signIn: '/sign-in',
+    },
+};
