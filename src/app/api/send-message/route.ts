@@ -1,9 +1,7 @@
-import { authOptions } from "@/app/auth/[...nextauth]/options";
+
 import dbConnect from "@/lib/dbConnect";
 import UserModel from "@/model/User";
-import mongoose from "mongoose";
-import { getServerSession } from "next-auth";
-import { User } from "next-auth";
+
 
 import { Message } from "@/model/User";
 
