@@ -1,5 +1,4 @@
 "use client"
-
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -15,9 +14,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
-
-
-
 
 const Page = () => {
     const [username, setUsername] = useState('');
@@ -48,13 +44,10 @@ const Page = () => {
                 setUsernameMassage('')
                 try {
                     const response = await axios.get(`/api/check-username-unique?username=${username}`)
-                    await setUsernameMassage(response.data.message)
-
-                    console.log(usernameMessage)
-
+                    setUsernameMassage(response.data.message)
                 } catch (error) {
-                    const axiosError = error as AxiosError
-                    setUsernameMassage(AxiosError.response?.data.message ?? "error checking username")
+                    const axiosError = error as AxiosError<ApiResponse>
+                    setUsernameMassage(axiosError.response?.data.message ?? "error checking username")
                 } finally {
                     setIsCheckingUsername(false)
                 }
@@ -76,7 +69,7 @@ const Page = () => {
             setIsSubmitting(false)
         } catch (error) {
             console.error("error in signup of user ", error)
-            const axiosError = error as AxiosError
+            const axiosError = error as AxiosError<ApiResponse>
             let errorMessage = axiosError.response?.data.message
             toast({
                 title: "sign up failed",
