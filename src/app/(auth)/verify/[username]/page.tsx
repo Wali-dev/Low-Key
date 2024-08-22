@@ -33,7 +33,7 @@ const Page = () => {
                 title: "Success",
                 description: response.data.message
             })
-            router.replace('signin')
+            router.replace('/signin')
         } catch (error) {
             console.error("error verifying user ", error)
             const axiosError = error as AxiosError<ApiResponse>
