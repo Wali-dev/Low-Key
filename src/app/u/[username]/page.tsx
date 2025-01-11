@@ -1,10 +1,21 @@
-"use client"
+"use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+    Card,
+    CardContent,
+    CardHeader,
+} from "@/components/ui/card";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/components/ui/use-toast";
 import { messageSchema } from "@/schemas/messageSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios, { AxiosError } from "axios";
@@ -13,12 +24,11 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useCompletion } from 'ai/react';
+import { useCompletion } from "ai/react";
 import { ApiResponse } from "@/types/apiResponse";
 import { z } from "zod";
 
-
-const specialChar = '||';
+const specialChar = "||";
 
 const parseStringMessages = (messageString: string): string[] => {
     return messageString.split(specialChar);
@@ -34,73 +44,74 @@ const Page = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [isSuggestLoading, setIsSuggestLoading] = useState(false);
 
-
-
     const {
         complete,
-        // isLoading: isSuggestLoading,
         completion,
-        error
+        error,
     } = useCompletion({
-        api: '/api/suggest-messages',
+        api: "/api/suggest-messages",
         initialCompletion: initialMessageString,
     });
 
+    // Define the schema type
+    type MessageSchemaType = z.infer<typeof messageSchema>;
 
-
-    //ZOD IMPLEMENTATION
-    const form = useForm({
+    // Initialize the form with Zod schema validation
+    const form = useForm<MessageSchemaType>({
         resolver: zodResolver(messageSchema),
-    })
+        defaultValues: {
+            content: "",
+            createdAt: new Date(),
+        },
+    });
 
     const isAcceptingMessages = useCallback(async () => {
-        const response = await axios.get('/api/accept-messages');
+        const response = await axios.get("/api/accept-messages");
         setIsAcceptingM(response.data.isAcceptingMessages);
-    }, [])
+    }, []);
 
     useEffect(() => {
         isAcceptingMessages();
-    }, [isAcceptingMessages])
+    }, [isAcceptingMessages]);
 
-    const messageContent = form.watch('content');
+    const messageContent = form.watch("content");
+
     const handleMessageClick = (message: string) => {
-        form.setValue('content', message);
+        form.setValue("content", message);
     };
 
-    const onSubmit = async (data: z.infer<typeof messageSchema>) => {
+    const onSubmit = async (data: MessageSchemaType) => {
         setIsLoading(true);
         try {
-            // const response = await axios.post<ApiResponse>('/api/send-message', {
-            //     ...data,
-            //     username,
-            // });
-            console.log(data)
+            const response = await axios.post<ApiResponse>("/api/send-message", {
+                ...data,
+                username,
+            });
 
             toast({
                 title: response.data.message,
-                variant: 'default',
+                variant: "default",
             });
-            form.reset({ ...form.getValues(), content: '' });
+
+            form.reset({ ...form.getValues(), content: "" });
         } catch (error) {
             const axiosError = error as AxiosError<ApiResponse>;
             toast({
-                title: 'Error',
+                title: "Error",
                 description:
-                    axiosError.response?.data.message ?? 'Failed to sent message',
-                variant: 'destructive',
+                    axiosError.response?.data.message ?? "Failed to send message",
+                variant: "destructive",
             });
         } finally {
             setIsLoading(false);
         }
     };
 
-
     const fetchSuggestedMessages = async () => {
         try {
-            complete('');
+            complete("");
         } catch (error) {
-            console.error('Error fetching messages:', error);
-
+            console.error("Error fetching messages:", error);
         }
     };
 
@@ -110,7 +121,10 @@ const Page = () => {
                 Public Profile Link
             </h1>
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-6"
+                >
                     <FormField
                         control={form.control}
                         name="content"
@@ -135,7 +149,10 @@ const Page = () => {
                                 Please wait
                             </Button>
                         ) : (
-                            <Button type="submit" disabled={isLoading || !messageContent}>
+                            <Button
+                                type="submit"
+                                disabled={isLoading || !messageContent}
+                            >
                                 Send It
                             </Button>
                         )}
@@ -179,13 +196,12 @@ const Page = () => {
             <Separator className="my-6" />
             <div className="text-center">
                 <div className="mb-4">Get Your Message Board</div>
-                <Link href={'/signup'}>
+                <Link href={"/signup"}>
                     <Button>Create Your Account</Button>
                 </Link>
             </div>
         </div>
+    );
+};
 
-    )
-}
-
-export default Page
+export default Page;

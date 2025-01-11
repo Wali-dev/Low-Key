@@ -110,8 +110,19 @@ const Page = () => {
     }
 
     //CREATE A DYNAMIC URL
-    const { username } = session?.user as User;
-    const baseUrl = `${window.location.protocol}//${window.location.host}`;
+    //  const { username } = session?.user as User;
+    const username = "jigloo";
+
+    // const baseUrl = `${window.location.protocol}//${window.location.host}`;
+    const getBaseUrl = () => {
+        if (typeof window !== "undefined") {
+            return `${window.location.protocol}//${window.location.host}`;
+        }
+        return "http://localhost:3000"; // Default fallback for SSR
+    };
+
+    const baseUrl = getBaseUrl();
+
     const profileUrl = `${baseUrl}/u/${username}`;
 
     //COPY TO CLIP BOARD METHOD
@@ -173,7 +184,7 @@ const Page = () => {
                 {messages.length > 0 ? (
                     messages.map((message, index) => (
                         <Messagecard
-                            key={message._id}
+                            key={String(message._id)}
                             message={message}
                             onMessageDelete={handleDeleteMessage}
                         />

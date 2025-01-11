@@ -31,7 +31,7 @@ const Messagecard = ({ message, onMessageDelete }: MessageCardProps) => {
             toast({
                 title: "Message deleted succesfully"
             })
-            onMessageDelete(message._id)
+            onMessageDelete(String(message._id))
         }
     }
     return (

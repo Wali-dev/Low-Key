@@ -19,10 +19,15 @@ const Page = () => {
     const { toast } = useToast()
 
     //ZOD IMPLEMENTATION
-    const form = useForm({
-        resolver: zodResolver(verifySchema),
-    })
+    type VerifySchemaType = z.infer<typeof verifySchema>;
 
+    // Initialize the form with Zod schema validation
+    const form = useForm<VerifySchemaType>({
+        resolver: zodResolver(verifySchema),
+        defaultValues: {
+            code: "",
+        },
+    });
     const onSubmit = async (data: z.infer<typeof verifySchema>) => {
         try {
             const response = await axios.post('/api/verify-code', {
